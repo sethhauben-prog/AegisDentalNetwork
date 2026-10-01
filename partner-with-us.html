@@ -2,6 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-K2LGK7FCFY"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-K2LGK7FCFY');
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Partner With Us | AEGIS Dental Network</title>
 <meta name="description" content="Ready to reach the dental profession? Tell us about your brand and goals, and the AEGIS Dental Network team will follow up within one business day.">
@@ -801,6 +809,12 @@
       })
         .then(function(response){
           if (!response.ok) throw new Error('Formspree submission failed');
+          if (typeof gtag === 'function') {
+            gtag('event', 'partner_form_submit', {
+              event_category: 'engagement',
+              event_label: 'Partner With Us Form'
+            });
+          }
           pwFormWrap.style.display = 'none';
           pwSuccess.classList.add('show');
         })
