@@ -2,6 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-K2LGK7FCFY"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-K2LGK7FCFY');
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Media Kits | AEGIS Dental Network</title>
 <meta name="description" content="Request media kits for AEGIS Dental Network's trusted publications — Inside Dentistry, Compendium, CDEWorld, and more.">
@@ -780,6 +788,12 @@
     })
       .then(function(response){
         if (!response.ok) throw new Error('Formspree submission failed');
+        if (typeof gtag === 'function') {
+          gtag('event', 'media_kit_request', {
+            event_category: 'engagement',
+            event_label: pendingTitle
+          });
+        }
         if (thanksKitNameEl) thanksKitNameEl.textContent = pendingTitle;
         formView.style.display = 'none';
         thanksView.classList.add('is-visible');
