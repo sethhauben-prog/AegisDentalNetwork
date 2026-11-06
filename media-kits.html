@@ -829,5 +829,123 @@
   });
 })();
 </script>
+
+<!--
+  AEGIS Dental Network: Salesforce Web-to-Lead snippet
+  Prepared by Shirah M. Brown
+
+  Where it goes: paste this block just before </body> on both
+    - partner-with-us.html  (form #partner-form)
+    - media-kits.html       (form #mkForm)
+
+  What it does: when a visitor submits either form, it sends the same details
+  to Salesforce as a new Lead (Lead Source = Website). Both forms get an
+  optional "I'm interested in" checkbox group, and the boxes ticked go to the
+  Lead's Products of Interest field. The existing Formspree submission,
+  thank-you message and page design are unchanged.
+
+  Ready to paste as is: the AEGIS org ID and the Products of Interest field ID
+  are already filled in. PRODUCTS must match the Lead picklist values exactly.
+-->
+<style>
+  .poi-group { border: 0; margin: 0 0 1rem; padding: 0; }
+  .poi-group legend { font-family: inherit; font-size: 13px; font-weight: 600; color: #1b2350; margin-bottom: .6rem; padding: 0; }
+  .poi-group legend .opt { font-weight: 400; color: #5b5f76; }
+  .poi-options { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; }
+  .poi-options label { display: inline-flex; align-items: center; gap: .4rem; font-size: 14.5px; font-weight: 400; color: #1e2233; cursor: pointer; }
+  .poi-options input { accent-color: #1b2350; width: 16px; height: 16px; margin: 0; }
+</style>
+<script>
+(function () {
+  var SF_ORG_ID = '00Dhk000004N3e1';      // AEGIS Dental Network org ID
+  var SF_POI_FIELD = '00Niv000000Ci3n';   // Lead.Products_of_Interest__c field ID
+  var SF_URL = 'https://webto.salesforce.com/servlet/servlet.WebToLead?encoding=UTF-8&orgId=' + SF_ORG_ID;
+  var LEAD_SOURCE = 'Website';
+  var PRODUCTS = ['Print', 'Digital', 'Social Media', 'Lead Generation', 'Content Development'];
+
+  function val(id) {
+    var el = document.getElementById(id);
+    return el ? el.value.trim() : '';
+  }
+
+  // Adds the "I'm interested in" checkboxes to a form, just before `before`
+  function addProducts(form, before) {
+    var group = document.createElement('fieldset');
+    group.className = 'poi-group';
+    group.innerHTML = '<legend>I’m interested in <span class="opt">(optional)</span></legend>' +
+      '<div class="poi-options">' + PRODUCTS.map(function (p) {
+        return '<label><input type="checkbox" name="poi" value="' + p + '"> ' + p + '</label>';
+      }).join('') + '</div>';
+    before.parentNode.insertBefore(group, before);
+  }
+
+  function picked(form) {
+    return Array.prototype.map.call(
+      form.querySelectorAll('input[name=poi]:checked'), function (c) { return c.value; });
+  }
+
+  function sendToSalesforce(fields, products) {
+    var body = new URLSearchParams();
+    body.append('oid', SF_ORG_ID);
+    body.append('lead_source', LEAD_SOURCE);
+    Object.keys(fields).forEach(function (k) {
+      if (fields[k]) body.append(k, fields[k]);
+    });
+    // Multi-select picklist: one entry per selected value
+    (products || []).forEach(function (p) { body.append(SF_POI_FIELD, p); });
+    // no-cors: Salesforce accepts the post; the browser doesn't need a reply
+    fetch(SF_URL, { method: 'POST', mode: 'no-cors', body: body }).catch(function () {});
+  }
+
+  // Partner With Us
+  var partner = document.getElementById('partner-form');
+  if (partner) {
+    var comments = document.getElementById('comments');
+    var anchor = comments ? (comments.closest('.form-row') || comments.closest('.form-field')) : null;
+    addProducts(partner, anchor || partner.querySelector('button[type=submit]'));
+
+    partner.addEventListener('submit', function () {
+      if (!partner.checkValidity()) return;
+      var notes = val('comments');
+      sendToSalesforce({
+        first_name: val('first-name'),
+        last_name: val('last-name'),
+        email: val('email'),
+        phone: val('phone'),
+        company: val('company'),
+        description: 'Website form: Partner With Us' + (notes ? '\n\n' + notes : '')
+      }, picked(partner));
+    }, true);
+  }
+
+  // Media Kit Request
+  var mk = document.getElementById('mkForm');
+  if (mk) {
+    addProducts(mk, document.getElementById('mkSubmitBtn') || mk.querySelector('button[type=submit]'));
+
+    var kit = '';
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-title]');
+      if (btn) kit = btn.getAttribute('data-title');
+    }, true);
+
+    mk.addEventListener('submit', function () {
+      if (!mk.checkValidity()) return;
+      var parts = val('mkName').split(/\s+/);
+      var first = parts.length > 1 ? parts.shift() : '';
+      var last = parts.join(' ');
+      sendToSalesforce({
+        first_name: first,
+        last_name: last,
+        email: val('mkEmail'),
+        company: val('mkCompany'),
+        title: val('mkTitle'),
+        phone: val('mkPhone'),
+        description: 'Website form: Media Kit Request' + (kit ? ' (' + kit + ')' : '')
+      }, picked(mk));
+    }, true);
+  }
+})();
+</script>
 </body>
 </html>
